@@ -5,8 +5,12 @@
 #include <iostream>
 #include <limits>
 #include <vector>
+#include <cmath>
 
 #include "../part-1/list.hpp"
+
+using namespace std;
+
 
 template <typename K, typename V, typename H> class HashTable
 {
@@ -52,6 +56,24 @@ template <typename K, typename V, typename H> class HashTable
         std::cout << ", max: " << max;
         std::cout << ", average: " << float(average) / _table.size() << '\n';
     }
+    
+    // My code
+    uint32_t hash(const string& str, const uint32_t m) {
+        int q = str.length();
+        int c_q;
+        int sum_total = 0;
+        for (int i = 0; i <= q-1; i++)
+        {
+        
+            c_q = str[q-1-i];
+
+            sum_total += (c_q * static_cast<int>(std::pow(256, i))) % m;      
+    
+        }
+        uint32_t h_c = sum_total % m;
+        return h_c;
+    };
+    ///
 
   private:
     struct KeyValuePair {
@@ -69,5 +91,9 @@ template <typename K, typename V, typename H> class HashTable
         return list_find_predecessor(&_table[slot], match);
     }
 };
+
+
+
+
 
 #endif // __hash__
