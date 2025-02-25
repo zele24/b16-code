@@ -11,10 +11,10 @@ std::vector<hop_t> bellman_ford(const SparseGraph &graph, const int source,
     
     auto DP = std::vector<hop_t>(V, {inf, -1});
 
-    // WRITE YOUR CODE HERE
 
     DP[source].weight = 0;
 
+    /*
     /////////////////// Initial testing /////////////////////
     // // Nodes connected to node 2 will have weight = weight 
     // // hop_t have .vertex and .weight (both integers)
@@ -53,15 +53,7 @@ std::vector<hop_t> bellman_ford(const SparseGraph &graph, const int source,
 
     
     // paths will store the weights of each path, in vectors of number of nodes along each path
-    vector<vector<hop_t>> paths(V);
-
-   //Process to get all paths of length 1
-    for (int i = 0; i < graph[source].size(); i++){
-        hop_t node;
-        node.weight = graph[source][i].weight;
-        node.vertex = graph[source][i].vertex;
-        paths[0].push_back(node);
-    }
+    
     
     // //Process to get all paths of length 2
     // // looping over each element in the first vector<hop_t> of paths (going along each node with path length 1)
@@ -75,33 +67,48 @@ std::vector<hop_t> bellman_ford(const SparseGraph &graph, const int source,
     //     paths[1].push_back(temp_node);
     // }
     // }
+    */
+    
+    vector<vector<hop_t>> paths(V);
+    vector<vector<int>> paths_prev(V); // stores preious nodes
 
-        //Process to get all paths of length up to V
-        for (int v = 0; v < V-1; v++) {
-        // Iterate over each path created previously to get the next nodes possible, and store these with their weights
+    //Process to get all paths of length 1
+    for (int i = 0; i < graph[source].size(); i++){
+        hop_t node;
+        node.weight = graph[source][i].weight;
+        node.vertex = graph[source][i].vertex;
+        paths[0].push_back(node);
+        paths_prev[0].push_back(source);
+    }
+    //Process to get all paths of length up to V
+    for (int v = 0; v < V-1; v++) {
+    // Iterate over each path created previously to get the next nodes possible, and store these with their weights
         for (int j = 0; j < paths[v].size(); j++){
             hop_t temp_node;
             vector<hop_t> graph_node = graph[paths[v][j].vertex];
-            // Taking every connection from that node and creating a path of length 2, stoing it in the next paths vector
+            // Taking every connection from that node and creating a path 1 longer, storing it in the next paths vector
             for (int k = 0; k < graph_node.size(); k++){
-                temp_node.vertex = graph_node[k].vertex; //Just stores the final node in the pth for checking later
+                temp_node.vertex = graph_node[k].vertex; //Just stores the final node in the path for checking later
                 temp_node.weight = graph_node[k].weight + paths[v][j].weight; //Summing up the total weight of that new path
+                paths_prev[v+1].push_back(paths[v][j].vertex);
+                
                 paths[v+1].push_back(temp_node);
             }
             }
 
         }
 
-        // Iterating over all the paths to get the minimum weight for each node
-        // This could be done in the earlier loops, but this is more understandable for me
+    // Iterating over all the paths to get the minimum weight for each node
+    // This could be done in the earlier loops, but this is more understandable for me
 
-        for (int i = 0; i < V; i++){
-            for (int j = 0; j < paths[i].size(); j++){
-                if (paths[i][j].weight < DP[paths[i][j].vertex].weight){
-                    DP[paths[i][j].vertex].weight = paths[i][j].weight;
-                }
+    for (int i = 0; i < V; i++){
+        for (int j = 0; j < paths[i].size(); j++){
+            if (paths[i][j].weight < DP[paths[i][j].vertex].weight){
+                DP[paths[i][j].vertex].weight = paths[i][j].weight;
+                DP[paths[i][j].vertex].vertex = paths_prev[i][j]; // Update the value of the previous node
             }
         }
+    }
 
     //
 
@@ -116,12 +123,47 @@ struct triplet_t {
 
 std::vector<hop_t> dijkstra(const SparseGraph &graph, const int source)
 {
-    //assert(source >= 0);
-    //assert(source < (signed)graph.size());
+  
+    const int V = static_cast<int>(graph.size());
+    auto DP = std::vector<hop_t>(V, {inf, -1});
 
-    auto DP = std::vector<hop_t>(graph.size(), {inf, -1});
 
-    // WRITE YOUR CODE HERE
+    // All nodes are curently open
+    std::vector<bool> is_open(V, true);
+
+    // Source is closed with 0 weight
+    DP[source].weight = 0;
+    is_open[source] = false;
+
+    while (true) {
+        float D_star = inf;  //Distance to v_star
+        int v_star = -1;  //Open vertex with the smallest total distance
+        int prev_node = -1;
+        
+        //Checks the total distance of all open nodes connected to any closed node, and saves the shortest total path
+        for (int v = 0; v < V; ++v) {
+            if (!is_open[v]) { 
+                for (int j=0; j< graph[v].size(); j++) {
+                    if (graph[v][j].weight + DP[v].weight < D_star && is_open[graph[v][j].vertex]) {
+                        D_star = graph[v][j].weight + DP[v].weight;  //Weight is the weight of the closed node + weight to the open node
+                        v_star = graph[v][j].vertex;
+                        prev_node = v;
+                    }
+                }
+            }
+        }
+
+        if (v_star < 0) {
+            break; // all closed, stop
+        }
+
+        DP[v_star].weight = D_star;
+        DP[v_star].vertex = prev_node;
+        is_open[v_star] = false;
+
+   
+    }
+
 
     return DP;
 }
@@ -154,15 +196,15 @@ int main(int argc, const char *argv[])
         std::cout << std::endl;
     }
 
-    // {
-    //     int source = 2;
-    //     std::cout << "Dijkstra from source " << source << std::endl;
-    //     auto DP = dijkstra(graph, source);
-    //     for (const auto &dist : DP) {
-    //         std::cout << dist << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+    {
+        int source = 2;
+        std::cout << "Dijkstra from source " << source << std::endl;
+        auto DP = dijkstra(graph, source);
+        for (const auto &dist : DP) {
+            std::cout << dist << " ";
+        }
+        std::cout << std::endl;
+    }
 
     return 0;
 }

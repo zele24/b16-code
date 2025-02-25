@@ -4,10 +4,13 @@
 #include "graph.hpp"
 #include <algorithm>
 #include <vector>
+using namespace std;
 
 inline std::vector<int> decode(const std::vector<hop_t> &DP, int v)
 {
-    // WRITE YOUR CODE HERE
+    vector<int> vec = {0,1,2};
+    return vec;
 }
 
 #endif // __shortest_paths_decode__
+
